@@ -92,6 +92,37 @@ def getReadInfo(input):
     return readInfo
 
 
+class StarRead:
+    dictInfo = {}
+
+    def __init__(self, input):
+        if type(input) is list:
+            if len(input) == 26:
+                self.dictInfo = getReadInfo(input)
+        elif type(input) is dict:
+            self.dictInfo = copy.copy(input)
+        else:
+            raise ValueException('input value type not allowed')
+
+    def __repr__(self):
+        _repr = ''
+        for k, v in self.dictInfo.items():
+            _repr += str(k) + ':' + str(v) + '\n'
+        return _repr
+
+    def getInfo(self):
+        return self.dictInfo
+
+    def getList(self):
+        return [(k, v) for k, v in self.dictInfo.items()]
+
+    def getFeature(self, feature=None):
+        if feature and (len(self.dictInfo) != 0):
+            return self.dictInfo[feature]
+        else:
+            raise ValueException('The class has no valid dict or no valid input')
+
+
 def test():
     with open(STAR_PATH + starname, 'r') as fr:
         for i in xrange(1, 40):
@@ -99,7 +130,7 @@ def test():
             matchRemove = patternRemove.match(rawRead)
             if (not matchRemove) and len(rawRead) > 0:
                 print 'line-', i, ' ', rawRead
-                print getReadList(rawRead)
+                print StarRead(getReadList(rawRead)).getFeature('voltage')
                 print getReadInfo(rawRead)
                 # print rawRead.split('\t')
 
