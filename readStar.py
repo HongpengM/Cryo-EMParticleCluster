@@ -47,9 +47,12 @@ pattern = re.compile(r'(.*?)')
 patternRemove = re.compile(r'_|.*_$')
 STAR_PATH = './'
 starname = 'run1_data.star'
-
+_keylist = ['voltage', 'defocusU', 'defocusV', 'defocusAngle', 'sphericalAbrr', 'detectPixelSize',
+            'ctfFigOfMerit', 'magnification', 'amplitudeContrast', 'imageName', 'coordX', 'coordY', 
+            'normCorrection', 'micrographName', 'groupNumber', 'originX', 'originY', 'angleRot',
+            'angleTilt', 'anglePsi', 'autopickFigOfMerit', 'classNumber', 'logLikeliContribution',
+            'NrOfSigSample', 'maxValProbDistr', 'randomSubset']
 # input a read and extract to list
-
 
 def getReadList(read):
     return re.split(r' *', read)
@@ -93,16 +96,18 @@ def getReadInfo(input):
 
 
 class StarRead:
+    ''' This Class represent a read in star file, and the parameters can be fecth using feature string'''
     dictInfo = {}
-
+    listInfo = {}
     def __init__(self, input):
-        if type(input) is list:
-            if len(input) == 26:
-                self.dictInfo = getReadInfo(input)
+        if type(input) is list or str:
+            self.dictInfo = getReadInfo(input)
+            self.listInfo = [self.dictInfo[k] for k in _keylist]
         elif type(input) is dict:
             self.dictInfo = copy.copy(input)
+            self.listInfo = [self.dictInfo[k] for k in _keylist]
         else:
-            raise ValueException('input value type not allowed')
+            raise Exception('input value type not allowed')
 
     def __repr__(self):
         _repr = ''
@@ -114,13 +119,22 @@ class StarRead:
         return self.dictInfo
 
     def getList(self):
-        return [(k, v) for k, v in self.dictInfo.items()]
+        return [(k, self.dictInfo[k]) for k in _keylist ]
+
+    def getFeatureName(self, feature):
+        if type(feature) is int:
+            return _keylist[feature]
+        else:
+            raise Exception('Feature name type error, please check the query again')
 
     def getFeature(self, feature=None):
-        if feature and (len(self.dictInfo) != 0):
+        if type(feature) is str and (len(self.dictInfo) != 0):
             return self.dictInfo[feature]
+        elif type(feature) is int:
+            return self.listInfo[feature]
         else:
-            raise ValueException('The class has no valid dict or no valid input')
+            raise Exception(
+                'The class has no valid dict or no valid input')
 
 
 def test():
@@ -130,8 +144,9 @@ def test():
             matchRemove = patternRemove.match(rawRead)
             if (not matchRemove) and len(rawRead) > 0:
                 print 'line-', i, ' ', rawRead
-                print StarRead(getReadList(rawRead)).getFeature('voltage')
+                print StarRead(getReadList(rawRead)).getFeature(1)
                 print getReadInfo(rawRead)
+                print StarRead(rawRead).getList()
                 # print rawRead.split('\t')
 
 
