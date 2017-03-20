@@ -2,7 +2,7 @@ import os
 import os.path
 import re
 import copy
-
+import pickle
 
 # Meaning of each item in read
 
@@ -46,13 +46,16 @@ import copy
 pattern = re.compile(r'(.*?)')
 patternRemove = re.compile(r'_|.*_$')
 STAR_PATH = './'
+# output the extract StarRead list
+OUTPUT_PATH = './'
 starname = 'run1_data.star'
 _keylist = ['voltage', 'defocusU', 'defocusV', 'defocusAngle', 'sphericalAbrr', 'detectPixelSize',
-            'ctfFigOfMerit', 'magnification', 'amplitudeContrast', 'imageName', 'coordX', 'coordY', 
+            'ctfFigOfMerit', 'magnification', 'amplitudeContrast', 'imageName', 'coordX', 'coordY',
             'normCorrection', 'micrographName', 'groupNumber', 'originX', 'originY', 'angleRot',
             'angleTilt', 'anglePsi', 'autopickFigOfMerit', 'classNumber', 'logLikeliContribution',
             'NrOfSigSample', 'maxValProbDistr', 'randomSubset']
 # input a read and extract to list
+
 
 def getReadList(read):
     return re.split(r' *', read)
@@ -66,32 +69,32 @@ def getReadInfo(input):
     if not (type(input) is list):
         input = getReadList(input)
     readInfo = {}
-    readInfo['voltage'] = input[0]
-    readInfo['defocusU'] = input[1]
-    readInfo['defocusV'] = input[2]
-    readInfo['defocusAngle'] = input[3]
-    readInfo['sphericalAbrr'] = input[4]
-    readInfo['detectPixelSize'] = input[5]
-    readInfo['ctfFigOfMerit'] = input[6]
-    readInfo['magnification'] = input[7]
-    readInfo['amplitudeContrast'] = input[8]
-    readInfo['imageName'] = input[9]
-    readInfo['coordX'] = input[10]
-    readInfo['coordY'] = input[11]
-    readInfo['normCorrection'] = input[12]
-    readInfo['micrographName'] = input[13]
-    readInfo['groupNumber'] = input[14]
-    readInfo['originX'] = input[15]
-    readInfo['originY'] = input[16]
-    readInfo['angleRot'] = input[17]
-    readInfo['angleTilt'] = input[18]
-    readInfo['anglePsi'] = input[19]
-    readInfo['autopickFigOfMerit'] = input[20]
-    readInfo['classNumber'] = input[21]
-    readInfo['logLikeliContribution'] = input[22]
-    readInfo['NrOfSigSample'] = input[23]
-    readInfo['maxValProbDistr'] = input[24]
-    readInfo['randomSubset'] = input[25]
+    readInfo['voltage'] = float(input[0])
+    readInfo['defocusU'] = float(input[1])
+    readInfo['defocusV'] = float(input[2])
+    readInfo['defocusAngle'] = float(input[3])
+    readInfo['sphericalAbrr'] = float(input[4])
+    readInfo['detectPixelSize'] = float(input[5])
+    readInfo['ctfFigOfMerit'] = float(input[6])
+    readInfo['magnification'] = float(input[7])
+    readInfo['amplitudeContrast'] = float(input[8])
+    readInfo['imageName'] = str(input[9])
+    readInfo['coordX'] = float(input[10])
+    readInfo['coordY'] = float(input[11])
+    readInfo['normCorrection'] = float(input[12])
+    readInfo['micrographName'] = str(input[13])
+    readInfo['groupNumber'] = int(input[14])
+    readInfo['originX'] = float(input[15])
+    readInfo['originY'] = float(input[16])
+    readInfo['angleRot'] = float(input[17])
+    readInfo['angleTilt'] = float(input[18])
+    readInfo['anglePsi'] = float(input[19])
+    readInfo['autopickFigOfMerit'] = float(input[20])
+    readInfo['classNumber'] = float(input[21])
+    readInfo['logLikeliContribution'] = float(input[22])
+    readInfo['NrOfSigSample'] = int(input[23])
+    readInfo['maxValProbDistr'] = float(input[24])
+    readInfo['randomSubset'] = int(input[25])
     return readInfo
 
 
@@ -99,6 +102,7 @@ class StarRead:
     ''' This Class represent a read in star file, and the parameters can be fecth using feature string'''
     dictInfo = {}
     listInfo = {}
+
     def __init__(self, input):
         if type(input) is list or str:
             self.dictInfo = getReadInfo(input)
@@ -119,13 +123,14 @@ class StarRead:
         return self.dictInfo
 
     def getList(self):
-        return [(k, self.dictInfo[k]) for k in _keylist ]
+        return [(k, self.dictInfo[k]) for k in _keylist]
 
     def getFeatureName(self, feature):
         if type(feature) is int:
             return _keylist[feature]
         else:
-            raise Exception('Feature name type error, please check the query again')
+            raise Exception(
+                'Feature name type error, please check the query again')
 
     def getFeature(self, feature=None):
         if type(feature) is str and (len(self.dictInfo) != 0):
@@ -137,17 +142,31 @@ class StarRead:
                 'The class has no valid dict or no valid input')
 
 
-def test():
-    with open(STAR_PATH + starname, 'r') as fr:
-        for i in xrange(1, 40):
+def getStarRead(fn):
+    try:
+        fh = open(fn + '.pkl', 'rb')
+        starReads = pickle.load(fh)
+        fh.close()
+    except IOError:
+        starReads = []
+        with open(STAR_PATH + fn, 'r') as fr:
+            counter = 0
             rawRead = fr.readline().strip()
-            matchRemove = patternRemove.match(rawRead)
-            if (not matchRemove) and len(rawRead) > 0:
-                print 'line-', i, ' ', rawRead
-                print StarRead(getReadList(rawRead)).getFeature(1)
-                print getReadInfo(rawRead)
-                print StarRead(rawRead).getList()
-                # print rawRead.split('\t')
+            while len(rawRead) > 0 or counter < 10:
+                matchRemove = patternRemove.match(rawRead)
+                if (not matchRemove) and len(rawRead) > 0:
+                    starReads.append(StarRead(rawRead))
+                    # print rawRead.split('\t')
+                rawRead = fr.readline().strip()
+                counter += 1
+        fh = open(fn + '.pkl', 'wb')
+        pickle.dump(starReads, fh)
+        fh.close()
+    return starReads
+
+
+def test():
+    print getStarRead(starname)[0]
 
 
 def main():
