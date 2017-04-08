@@ -222,6 +222,11 @@ class ACKmeans(object):
             ))
         #====================End Update ==========================
 
+
+    def predict(self, vec, dist=distEucld):
+        dist = map((lambda x: dist(vec, x)), self.centroids)
+        return np.argmin(dist)
+        
     def printArgs(self):
         print 'Cluster number : ', self.k, ' Data shape: ', self.shape
         print 'Input data:\n', self.data
