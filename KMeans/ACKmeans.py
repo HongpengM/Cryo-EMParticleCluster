@@ -67,7 +67,8 @@ class ACKmeans(object):
         self.centroids = []
         for i in range(k):
             self.centroids.append(data[indexShuffle[i], :])
-        print 'init centroids\n', self.centroids
+        # print 'init centroids\n', self.centroids
+        print 'Init centroids complete'
 
     def fit(self, dataSet, distMethod=distEucld, centrSel=randCentroids):
         if dataSet == None:
@@ -146,15 +147,25 @@ class ACKmeans(object):
             newCentroids = np.sum(classMem, 1) / float(len(classMem[0]))
             self.centroids[i] = newCentroids[0]
         #===================End Initialize=====================
-
+        print 'Initialize stage finished'
         sigma_zero = 0.01
         sigma = 2 * sigma_zero
+        sigmaold = sigma
         pixelIntensityConstant = 10
         beta = 0.5
+        sigmaCnter = 0
         #======================Update ==========================\
         # Calculate adaptive parameters
-        # while sigma > sigma_zero:
-        for _ in range(2):
+        cnter = 0
+        while sigma > sigma_zero:
+            if sigmaold == sigma:
+                sigmaCnter += 1
+            sigmaold = sigma
+            if sigmaCnter > 200:
+                return
+            cnter += 1
+            print 'Sigma: ', sigma, 'Counter:', sigmaCnter
+
             indexShuffle = np.arange(len(data))
             np.random.shuffle(indexShuffle)
             indexShuffle = indexShuffle[0:pixelIntensityConstant]
@@ -167,72 +178,93 @@ class ACKmeans(object):
             lambda_ = beta * d_c * 0.5 / np.floor(n / float(k))
             classAssignOld = copy.copy(classAssign)
 
-        getAssignIndex = (lambda classAssign:
-                          map((lambda x: x[0]),
-                              classAssign))
-        numberOfOthersInSameClass = (lambda thisClass, dpClass, classAssign:
-                                     sum(
-                                         map(
-                                             (lambda x: 1 if x ==
-                                              thisClass and x != dpClass else 0),
-                                             getAssignIndex(classAssign)
+            getAssignIndex = (lambda classAssign:
+                              map((lambda x: x[0]),
+                                  classAssign))
+            numberOfOthersInSameClass = (lambda thisClass, dpClass, classAssign:
+                                         sum(
+                                             map(
+                                                 (lambda x: 1 if x ==
+                                                  thisClass and x != dpClass else 0),
+                                                 getAssignIndex(classAssign)
+                                             )
                                          )
-                                     )
-                                     )
-        # Update classAssignment
-        for i in range(n):
-            datapoint = data[i, :]
-            # print '--debug--', datapoint, data, centroids
-            distConstList = map(
-                (lambda x: dist(datapoint, x)),
-                centroids
-            )
+                                         )
+            print 'Parameter calculate finished'
+            # Update classAssignment
+            for i in range(n):
+                datapoint = data[i, :]
+                # print '--debug--', datapoint, data, centroids
+                distConstList = map(
+                    (lambda x: dist(datapoint, x)),
+                    centroids
+                )
 
-            adaptiveItem = map(
-                (lambda x:
-                 2 * lambda_ * numberOfOthersInSameClass(x, i, classAssign)),
-                np.arange(k)
-            )
-            distList = map(
-                (lambda x: x[0] + x[1]),
-                zip(distConstList, adaptiveItem)
-            )
+                adaptiveItem = map(
+                    (lambda x:
+                     2 * lambda_ * numberOfOthersInSameClass(x, i, classAssign)),
+                    np.arange(k)
+                )
+                distList = map(
+                    (lambda x: x[0] + x[1]),
+                    zip(distConstList, adaptiveItem)
+                )
 
-            mindistIndex = np.argmin(distList)
-            classAssign[i] = [mindistIndex, distList[mindistIndex]]
-
-        # Update centroids
-        for i in range(k):
-            # length n array of T/F
-            classMem = map(
-                (lambda x: True if x[0] == i else False), classAssign)
-            classMem = np.where(classMem)
-            # part of data belongs to class i
-            classMem = [data[j] for j in classMem]
-            newCentroids = np.sum(classMem, 1) / float(len(classMem[0]))
-            self.centroids[i] = newCentroids[0]
-
-        print '-->' * 10
-
-        print '--<' * 10
-        sigma = 1 - np.average(
-            map(
-                (lambda x: 1 if x[0] == [1] else 0),
-                zip(getAssignIndex(classAssign), getAssignIndex(classAssignOld))
-            ))
+                mindistIndex = np.argmin(distList)
+                classAssign[i] = [mindistIndex, distList[mindistIndex]]
+                if i % (np.floor(n / 20) + 1) == 0:
+                    print 'Finished class update', float(i) / n * 100, '%'
+            print 'Class update finished'
+            # Update centroids
+            for i in range(k):
+                # length n array of T/F
+                classMem = map(
+                    (lambda x: True if x[0] == i else False), classAssign)
+                classMem = np.where(classMem)
+                # part of data belongs to class i
+                classMem = [data[j] for j in classMem]
+                newCentroids = np.sum(classMem, 1) / float(len(classMem[0]))
+                self.centroids[i] = newCentroids[0]
+            print 'Centroids update finished'
+            sigma = 1 - np.average(
+                map(
+                    (lambda x: 1 if x[0] == x[1] else 0),
+                    zip(getAssignIndex(classAssign),
+                        getAssignIndex(classAssignOld))
+                ))
+            # print '-->' * 10
+            # print getAssignIndex(classAssign), getAssignIndex(classAssignOld), map(
+            #     (lambda x: 1 if x[0] == x[1] else 0),
+            #     zip(getAssignIndex(classAssign),
+            #         getAssignIndex(classAssignOld))
+            # )
+            # print '<--' * 10
+            print 'Sigma update finished'
+        self.classAssign = copy.copy(classAssign)
         #====================End Update ==========================
 
-
     def predict(self, vec, dist=distEucld):
-        dist = map((lambda x: dist(vec, x)), self.centroids)
-        return np.argmin(dist)
-        
+        # if input is n samples
+        if (len(vec.shape) - len(self.centroids[0].shape)) == 1:
+            predictAssign = []
+            for i in range(vec.shape[0]):
+                distance = map(
+                    (lambda x: dist(vec[i], x)), self.centroids)
+                predictAssign.append(np.argmin(distance))
+            return np.array(predictAssign)
+        distance = map((lambda x: dist(vec, x)), self.centroids)
+        return np.argmin(distance)
+
     def printArgs(self):
+        print '<', '=' * 40, '>'
+        print '=' * 10, 'Classifier information', '=' * 10
+        print '<', '=' * 40, '>'
         print 'Cluster number : ', self.k, ' Data shape: ', self.shape
         print 'Input data:\n', self.data
         print 'Centroids:\n', self.centroids
-        print 'Cluster result:\n',
-        '-----Class -- | ---Distance ----\n', self.classAssign
+        print 'Cluster result:'
+        print '-----Class -- | ---Distance ----\n', self.classAssign
+        print '<', '=' * 40, '>'
 
 
 def test():
@@ -240,7 +272,8 @@ def test():
     kclf = ACKmeans(k=3)
     kclf.fit(a)
     kclf.printArgs()
-    print kclf.classAssign
+    print kclf.predict(np.arange(12).reshape(2, 2, 3))
+    # print kclf.classAssign
 
 
 def main():

@@ -7,10 +7,12 @@ sys.path.append('./KMeans')
 import readh5
 from sklearn.cluster import KMeans
 
-# data = readh5.mergeDataSet('../weiner', r'(.*?)weiner\.hdf')
-with h5py.File('maskedImages.hdf', 'r') as f:
-    data = np.zeros((len(f['images']),) + (180, 180))
-
+with h5py.File('maskedImages.hdf', 'r') as h:
+    data = np.zeros((len(h['images']),) + (180, 180))
+    for i in range(len(h['images'])):
+        data[i] = h['images'][str(i)]
+print 'data shape', data.shape
+print data[2]
 data = data.reshape(data.shape[0], -1)
 data = data[~np.isnan(data).any(axis=1)]
 print np.isinf(data), np.sum(np.isinf(data))

@@ -7,10 +7,13 @@ sys.path.append('./KMeans')
 import readh5
 from sklearn.cluster import KMeans
 
-# data = readh5.mergeDataSet('../weiner', r'(.*?)weiner\.hdf')
-with h5py.File('maskedImages.hdf', 'r') as f:
-    data = np.zeros((len(f['images']),) + (180, 180))
-
+with h5py.File('rotated.hdf', 'r') as h:
+    data = np.zeros((len(h['images']),) + (60, 60))
+    for i in range(len(h['images']) / 8):
+        for j in range(8):
+            data[i * 8 + j] = h['images'][str(i) + '_' + str(45 * j)]
+print 'data shape', data.shape
+print data[2]
 data = data.reshape(data.shape[0], -1)
 data = data[~np.isnan(data).any(axis=1)]
 print np.isinf(data), np.sum(np.isinf(data))
@@ -25,7 +28,7 @@ for i in range(100):
         index = np.where(pred == i)
         dt = [data[j] for j in index]
         stacked[i] = np.sum(dt[0], 0) / float(dt[0].shape[0])
-result = h5py.File('clusterResult_masked.hdf', 'w')
+result = h5py.File('clusterResult_rotated.hdf', 'w')
 result.create_group('MDF')
 result['MDF'].create_group('images')
 for i in range(stacked.shape[0]):
@@ -33,9 +36,9 @@ for i in range(stacked.shape[0]):
     images.create_group(str(i))
     images[str(i)].create_dataset(
         'image',
-        shape=(180, 180),
+        shape=(60, 60),
         dtype='float32',
-        data=kclf.cluster_centers_[i, :].reshape(180, 180))
+        data=kclf.cluster_centers_[i, :].reshape(60, 60))
 result.close()
 
 # result = h5py.File('clusterResult.hdf', 'w')

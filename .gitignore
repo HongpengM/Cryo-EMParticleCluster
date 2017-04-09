@@ -1,0 +1,11 @@
+# Python:
+*.py[cod]
+*.so
+*.egg
+*.egg-info
+
+# hdf data file
+*.hdf
+
+# Reference file
+Ref*.pdf

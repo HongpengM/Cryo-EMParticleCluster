@@ -75,17 +75,26 @@ def mergeDataSet(folderName, namePattern):
         for name in os.listdir(folderName):
             match = re.match(namePattern, name)
             if match:
+                print name
                 tempList.append((name, cnt))
                 with h5py.File(os.path.join(folderName, name), 'r') as f:
                     for i in range(len(f['MDF']['images'])):
-                        mergeMat[i, :] = f['MDF']['images'][str(i)]['image']
-                    cnt += len(f['MDF']['images'])
+                        if np.sum(f['MDF']['images'][str(i)]['image']) != 0.0 and\
+                                np.sum(f['MDF']['images'][str(i)]['image']) != float('nan'):
+                            mergeMat[cnt, :] = f['MDF'][
+                                'images'][str(i)]['image']
+                            cnt += 1
+                            print name, i, 'th matrix', \
+                                np.sum(f['MDF']['images'][str(i)]['image']), \
+                                type(
+                                    np.sum(f['MDF']['images'][str(i)]['image']))
 
                 # [record: filename, [start number, end number]]
                 tempList[-1] = tempList[-1] + (cnt, )
+        mergeMat = mergeMat[0:cnt]
         if not os.path.isfile(_TEMPFILE):
             # write temp matrix
-            h5py.File
+
             matrixResult = h5py.File(_TEMPFILE, 'w')
             matrixResult.create_group('images')
             for i in range(mergeMat.shape[0]):
@@ -109,8 +118,8 @@ def test():
     #     for i in f:
     #         print len(f[i])
 
-    print os.path.curdir
-    a = mergeDataSet('/home/k/GithubRepo/weiner', r'(.*?)wiener\.hdf')
+    # print os.path.curdir
+    a = mergeDataSet('../../weiner', r'(.*?)wiener\.hdf')
     print a.shape
     print np.max(a[1, :]), np.min(a[1, :]), np.mean(a[1, :])
 
