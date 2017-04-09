@@ -33,9 +33,9 @@ def outputImage(outFolder, mat, name='classResult'):
 
 
 def test():
-    mat = mergeMat('.', 'clusterResult_rotated_ackmeans_1000.hdf')
+    mat = mergeMat('.', 'clusterResult_rotated_1000.hdf')
     print mat.shape
-    outputImage('.', mat, 'skkmeans_masked_ackmeans_1000')
+    outputImage('.', mat, 'skkmeans_masked_rotated_1000')
 
 
 def main():

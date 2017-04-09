@@ -18,6 +18,7 @@ data = data.reshape(data.shape[0], -1)
 data = data[~np.isnan(data).any(axis=1)]
 print np.isinf(data), np.sum(np.isinf(data))
 print np.isnan(data), np.sum(np.isnan(data))
+data = data[0:1000]
 print data.shape
 kclf = KMeans(n_clusters=100, random_state=0).fit(data)
 pred = kclf.predict(data)
@@ -28,7 +29,7 @@ for i in range(100):
         index = np.where(pred == i)
         dt = [data[j] for j in index]
         stacked[i] = np.sum(dt[0], 0) / float(dt[0].shape[0])
-result = h5py.File('clusterResult_rotated.hdf', 'w')
+result = h5py.File('clusterResult_rotated_1000.hdf', 'w')
 result.create_group('MDF')
 result['MDF'].create_group('images')
 for i in range(stacked.shape[0]):
