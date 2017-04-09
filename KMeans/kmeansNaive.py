@@ -132,11 +132,16 @@ class kmeansAlg(object):
                 # print '--<' * 10
                 self.centroids[i] = newCentroids[0]
 
+    def predict(self, vec, dist=distEucld):
+        dist = map((lambda x: dist(vec, x)), self.centroids)
+        return np.argmin(dist)
+
     def printArgs(self):
         print 'Cluster number : ', self.k, ' Data shape: ', self.shape
         print 'Input data:\n', self.data
         print 'Centroids:\n', self.centroids
-        print 'Cluster result:\n', '-----Class -- | ---Distance ----\n', self.classAssign
+        print 'Cluster result:\n', '-----Class -- | ---Distance ----\n',\
+            self.classAssign
 
 
 def test():
@@ -144,6 +149,7 @@ def test():
     kclf = kmeansAlg(k=2)
     kclf.fit(a)
     kclf.printArgs()
+    print kclf.predict(np.array([[21, 22, 13], [13, 14, 15]]))
 
 
 def main():
