@@ -8,6 +8,4 @@ A Weiner filtered image:
 
    /images
 
-​      /[number of box]
-
-​         image(data, 180 x 180, float32)
+​      [number of box]    image(data, 180 x 180, float32)

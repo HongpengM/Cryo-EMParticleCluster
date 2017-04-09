@@ -1,0 +1,1 @@
+2017/04/04 10:32:14	incomplete         	  5648/    -2	k	/home/k/Softwares/EMAN2/bin/e2evalimage.py clusterResult.hdf --apix=1.0 --constbfactor=-1.0 --voltage=300.0 --cs=2.0 --ac=10.0 --box=-1 --ppid=-2

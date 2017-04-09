@@ -39,6 +39,7 @@ import os
 def estimate(folderName, namePattern):
     cnt = 0
     for name in os.listdir(folderName):
+        print name
         match = re.match(namePattern, name)
         if match:
             with h5py.File(os.path.join(folderName, name), 'r') as f:
@@ -53,10 +54,14 @@ def mergeDataSet(folderName, namePattern):
 
     _TEMPFILE = os.path.join(folderName, 'lastRunResult.hdf')
     _TEMPCONFIG = os.path.join(folderName, '.lastConfigure')
+
     if os.path.isfile(_TEMPFILE):
-        estimateSize = estimate(folderName, namePattern)
+        # estimateSize = estimate(folderName, namePattern)
+
         with h5py.File(_TEMPFILE, 'r') as temp:
-            assert len(temp['images']) == estimateSize
+            estimateSize = len(temp['images'])
+            # print len(temp['images']), estimateSize
+            # assert len(temp['images']) == estimateSize
             mergeMat = np.zeros((estimateSize, 180, 180))
             for i in range(estimateSize):
                 mergeMat[i, :] = temp['images'][str(i)]
@@ -105,9 +110,9 @@ def test():
     #         print len(f[i])
 
     print os.path.curdir
-    a = mergeDataSet('weiner', r'(.*?)wiener\.hdf')
+    a = mergeDataSet('/home/k/GithubRepo/weiner', r'(.*?)wiener\.hdf')
     print a.shape
-    print a[1, :]
+    print np.max(a[1, :]), np.min(a[1, :]), np.mean(a[1, :])
 
 
 def main():

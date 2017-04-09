@@ -1,0 +1,11 @@
+{
+"ac": 10.0, 
+"apix": 1.0, 
+"astigmatism": false, 
+"box": -1, 
+"constbfactor": -1.0, 
+"cs": 2.0, 
+"image": "clusterResult.hdf", 
+"usefoldername": false, 
+"voltage": 300.0
+}
