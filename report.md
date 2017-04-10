@@ -22,7 +22,27 @@ The input to our project is k(3710 X 3710) images, each with 100~200 particle im
 
 ## Algorithm
 
-### CTF correction
+### Contrast transfer function(CTF) correction
+
+Denotes:
+
+CTF  $H(\vec{k})$, Point transfer function(PTF) $h(\vec{k})$ , image $i(\vec{r})$, true object image $o(\vec{r})$.
+
+Following the convolution theorem:
+$$
+i(\vec{r}) = o(\vec{r})  \mbox{*} h({\vec{r}}) \\
+\mathbf{FT}(i(\vec{r})) = \mathbf{FT}(o(\vec{r}))  \mathbf{FT}( h({\vec{r}})) \\
+I(\vec{k}) = O(\vec{k})H(\vec{k})\\
+o(\vec{r}) = \mathbf{FT^{-1}}[I{(\vec{k})} (H(\vec{k})^{-1})] \\
+$$
+
+
+the Weriner filter is the least square solution to this problem, therefore:
+$$
+o(\vec{r}) \cong \mathbf{FT^{-1}}[I{(\vec{k})} \frac{1}{H(\vec{k})} \frac{|H(\vec{k})^2|}{|H(\vec{k})^2| + k}] \\
+k = \frac{1}{SNR}
+$$
+doing CTF correction is making $H(\vec{k}) \to 0$, and restore the information of image as much as possible.
 
 
 
@@ -117,9 +137,9 @@ k: number of class
     Update centroids
         for each centroids
             cent = average(all class member)
+            
 # Update cycle
 while sigma > sigma_0
-
     calculate the change of pixel intensity d_c
     by randome select images
     t_m = max dist(image_m, centroid) -
@@ -129,14 +149,20 @@ while sigma > sigma_0
     class_Assignment_old = class_Assignment
 
     for each datapoint
-        s_prime = # other datapoint whose class is the same as
-                    this one
+        s_prime = number of other datapoint whose class is the same as this one
         update classAssignment
 
-    update centroid
-        for each centroids
-            cent = average(all class member)
+    for each centroids
+    	update centroids by averaging
 ```
+
+
+### Methods
+
+images -- CTF -- mask -- rotation and resize -- cluster(K-means / ACK-means)
+
+
+
 ## Results
 
 Simple K-means(CTF processed):
@@ -160,4 +186,18 @@ EMAN2 cluster result(CTF processed, MSA + MRA)
 
 
 ## Discussion
+
+
+
+Distance measurement of two images
+
+Bad images removal
+
+PCA / ICA / autoencoder: dimensionality reduction, feature extraction
+
+Iterative choosing k. --> ISAC
+
+Parallel computing, mini-batch update ...
+
+Different contribution of rotated figure.
 
